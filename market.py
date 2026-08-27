@@ -18,10 +18,7 @@ market.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL or 'sqlite:///market.db'
 market.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(market)
 
-# 1. ADDED: Tell Flask where to create your local database file
-market.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///market.db'
-market.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(market)
+
 
 # Define your Database Table Structure
 class Customer(db.Model):
