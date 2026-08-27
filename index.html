@@ -3,42 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Market Customer Dashboard</title>
+    <title>Customer Database</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
         h1 { color: #333; }
-        .card { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        button { background: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
+        .card { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid #28a745; }
+        button { background: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 15px; }
         button:hover { background: #0056b3; }
+        .error { color: red; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <h1>Customer Database</h1>
+    <!-- The click event calls loadCustomers() -->
     <button onclick="loadCustomers()">Fetch Customers From Cloud</button>
     
-    <!-- This empty container is where our backend data will be injected -->
     <div id="customer-list"></div>
 
     <script>
-        // Replace this with your exact public Render live URL!
-        const API_URL = "https://onrender.com";
+        // Your working live URL path!
+        const API_URL = "https://my-market-api-rm2j.onrender.com/customers";
 
+        // The function name now matches the button perfectly!
         async function loadCustomers() {
             const listContainer = document.getElementById('customer-list');
-            listContainer.innerHTML = "<p>Loading data from Render server...</p>";
+            listContainer.innerHTML = "<p style='color: orange;'>Loading data from Render server...</p>";
 
             try {
-                // 1. Fetch data from your backend API
                 const response = await fetch(API_URL);
                 const result = await response.json();
 
-                // 2. Clear the loading text
                 listContainer.innerHTML = "";
 
-                // 3. Loop through your SQL database rows and turn them into HTML visual blocks
                 if (result.data.length === 0) {
-                    listContainer.innerHTML = "<p>No customers found in the database. Use Postman to add one!</p>";
+                    listContainer.innerHTML = "<p>The database is currently empty. Use Postman to POST a customer first!</p>";
                 } else {
                     result.data.forEach(customer => {
                         const customerCard = `
@@ -53,7 +52,7 @@
                 }
             } catch (error) {
                 console.error("Error connecting to backend:", error);
-                listContainer.innerHTML = "<p style='color: red;'>Failed to connect to the backend API. Check CORS settings.</p>";
+                listContainer.innerHTML = "<p class='error'>Failed to connect to the backend API. Check CORS settings.</p>";
             }
         }
     </script>

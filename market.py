@@ -4,6 +4,8 @@ from flask_cors import CORS
 
 market = Flask(__name__)
 
+CORS(market, resources={r"/*": {"origins": "*", "allow_headers": "*", "methods": ["GET", "POST", "OPTIONS"]}})
+
 # 1. ADDED: Tell Flask where to create your local database file
 market.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///market.db'
 market.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
