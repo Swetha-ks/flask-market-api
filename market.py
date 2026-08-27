@@ -77,6 +77,20 @@ def create_customer():
     
     return jsonify(new_cus.to_dict()), 201
 
+@market.route('/customers/<int:cus_id>', methods=['DELETE'])
+def delete_customer(cus_id):
+    # Search the table directly by its primary key ID
+    customer = Customer.query.get(cus_id)
+    
+    if customer is None:
+        return jsonify({"error": "Data Error: Customer row record not found"}), 404
+        
+    # Erase the row from the tracking layer and commit changes to disk
+    db.session.delete(customer)
+    db.session.commit()
+    
+    return jsonify({"message": f"Customer row {cus_id} successfully deleted from table."}), 200
+
 
 if __name__ == '__main__':
     market.run(port=5000, debug=True)

@@ -79,12 +79,11 @@
             statusDiv.style.display = "block";
             statusDiv.innerText = "Sending payload data to cloud server...";
 
-            try {
-                // 2. Configure fetch to send a structured POST request
+                        try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json' // Crucial: Tells Flask to expect JSON payload data
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         name: nameValue,
@@ -93,24 +92,28 @@
                     })
                 });
 
+                // Grab the JSON response text from the server (even if it's an error)
+                const responseData = await response.json();
+
                 if (response.status === 201) {
                     statusDiv.className = "status-message success";
                     statusDiv.innerText = `Success! Customer "${nameValue}" saved successfully.`;
                     
-                    // Clear out form inputs to prepare for next entry
                     document.getElementById('cusName').value = '';
                     document.getElementById('cusDate').value = '';
                     document.getElementById('cusPayment').value = '';
                     
-                    // Auto-refresh the customer directory list below instantly
                     loadCustomers();
                 } else {
-                    throw new Error("Server rejected storage transaction");
+                    // CHANGED: Use the exact error message your Python backend sent!
+                    statusDiv.className = "status-message error";
+                    statusDiv.innerText = responseData.error || "Server rejected transaction.";
                 }
             } catch (err) {
                 statusDiv.className = "status-message error";
-                statusDiv.innerText = "Failed to add record. Check backend connection.";
+                statusDiv.innerText = "Network Error: Could not connect to the cloud server.";
             }
+
         }
 
         // --- FETCH FUNCTION (GET REQUEST) ---
