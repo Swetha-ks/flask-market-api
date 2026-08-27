@@ -55,18 +55,28 @@ def display_by_id(cus_id):
 
 @market.route('/customers', methods=['POST'])
 def create_customer():
-    # 4. CHANGED: Read data and let SQLite auto-increment the ID key dynamically
+    # 1. Grab incoming network fields safely
+    name = request.json.get('name')
+    date = request.json.get('date')
+    payment = request.json.get('payment')
+
+    # 2. ADDED: Defensive Validation Check
+    # Verify that the payment value is a clean numeric digit (no letters or symbols)
+    if payment and not str(payment).isdigit():
+        return jsonify({"error": "Bad Request: Payment must be a clean numeric digit format."}), 400
+
+    # 3. Build and append rows payload permanently to your SQL schema if safe
     new_cus = Customer(
-        name=request.json.get('name'),
-        date=request.json.get('date'),
-        payment=request.json.get('payment')
+        name=name,
+        date=date,
+        payment=payment
     )
 
-    # Add and commit row payload permanently to the database file
     db.session.add(new_cus)
     db.session.commit()
     
     return jsonify(new_cus.to_dict()), 201
+
 
 if __name__ == '__main__':
     market.run(port=5000, debug=True)

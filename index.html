@@ -3,56 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Database</title>
+    <title>Customer Management System</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
-        h1 { color: #333; }
-        .card { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid #28a745; }
-        button { background: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 15px; }
-        button:hover { background: #0056b3; }
-        .error { color: red; margin-top: 15px; font-weight: bold; }
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; }
+        h1, h2 { color: #222; }
+        .form-section { background: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; border: none; border-radius: 4px; font-size: 15px; cursor: pointer; color: white; margin-bottom: 10px; }
+        .btn-submit { background-color: #28a745; }
+        .btn-submit:hover { background-color: #218838; }
+        .btn-fetch { background-color: #007bff; }
+        .btn-fetch:hover { background-color: #0056b3; }
+        .card { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid #007bff; }
+        .status-message { font-weight: bold; margin: 10px 0; padding: 10px; border-radius: 4px; display: none; }
+        .success { background-color: #d4edda; color: #155724; display: block; }
+        .error { background-color: #f8d7da; color: #721c24; display: block; }
     </style>
 </head>
 <body>
 
-    <h1>Customer Database</h1>
-    <!-- The click event calls loadCustomers() -->
-    <button onclick="loadCustomers()">Fetch Customers From Cloud</button>
-    
-    <div id="customer-list"></div>
+    <div class="container">
+        <h1>Customer Management Dashboard</h1>
+
+        <!-- SECTION 1: THE INPUT FORM -->
+        <div class="form-section">
+            <h2>Add New Customer</h2>
+            <div id="status" class="status-message"></div>
+            
+            <div class="form-group">
+                <label for="cusName">Customer Name:</label>
+                <input type="text" id="cusName" placeholder="e.g. John Doe">
+            </div>
+            <div class="form-group">
+                <label for="cusDate">Date:</label>
+                <input type="text" id="cusDate" placeholder="e.g. 11/2026">
+            </div>
+            <div class="form-group">
+                <label for="cusPayment">Payment Amount (₹):</label>
+                <input type="text" id="cusPayment" placeholder="e.g. 9800">
+            </div>
+            <button class="btn-submit" onclick="submitCustomer()">Add to Cloud Database</button>
+        </div>
+
+        <!-- SECTION 2: DATA RETRIEVAL DISPLAY -->
+        <div class="form-section">
+            <h2>Saved Customer Directory</h2>
+            <button class="btn-fetch" onclick="loadCustomers()">Fetch Directory Records</button>
+            <div id="customer-list"></div>
+        </div>
+    </div>
 
     <script>
-        // Your working live URL path!
         const API_URL = "https://my-market-api-rm2j.onrender.com/customers";
 
-        // The function name now matches the button perfectly!
+        // --- SUBMIT FUNCTION (POST REQUEST) ---
+        async function submitCustomer() {
+            const statusDiv = document.getElementById('status');
+            
+            // 1. Grab values typed into the browser text inputs
+            const nameValue = document.getElementById('cusName').value;
+            const dateValue = document.getElementById('cusDate').value;
+            const paymentValue = document.getElementById('cusPayment').value;
+
+            // Simple check to ensure fields aren't completely blank before sending
+            if (!nameValue || !dateValue || !paymentValue) {
+                statusDiv.className = "status-message error";
+                statusDiv.innerText = "Error: Please fill out all three fields first.";
+                return;
+            }
+
+            statusDiv.className = "status-message";
+            statusDiv.style.display = "block";
+            statusDiv.innerText = "Sending payload data to cloud server...";
+
+            try {
+                // 2. Configure fetch to send a structured POST request
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json' // Crucial: Tells Flask to expect JSON payload data
+                    },
+                    body: JSON.stringify({
+                        name: nameValue,
+                        date: dateValue,
+                        payment: paymentValue
+                    })
+                });
+
+                if (response.status === 201) {
+                    statusDiv.className = "status-message success";
+                    statusDiv.innerText = `Success! Customer "${nameValue}" saved successfully.`;
+                    
+                    // Clear out form inputs to prepare for next entry
+                    document.getElementById('cusName').value = '';
+                    document.getElementById('cusDate').value = '';
+                    document.getElementById('cusPayment').value = '';
+                    
+                    // Auto-refresh the customer directory list below instantly
+                    loadCustomers();
+                } else {
+                    throw new Error("Server rejected storage transaction");
+                }
+            } catch (err) {
+                statusDiv.className = "status-message error";
+                statusDiv.innerText = "Failed to add record. Check backend connection.";
+            }
+        }
+
+        // --- FETCH FUNCTION (GET REQUEST) ---
         async function loadCustomers() {
             const listContainer = document.getElementById('customer-list');
-            listContainer.innerHTML = "<p style='color: orange;'>Loading data from Render server...</p>";
+            listContainer.innerHTML = "<p style='color: orange;'>Loading records from Render server...</p>";
 
             try {
                 const response = await fetch(API_URL);
                 const result = await response.json();
-
                 listContainer.innerHTML = "";
 
                 if (result.data.length === 0) {
-                    listContainer.innerHTML = "<p>The database is currently empty. Use Postman to POST a customer first!</p>";
+                    listContainer.innerHTML = "<p>The database is currently empty.</p>";
                 } else {
                     result.data.forEach(customer => {
-                        const customerCard = `
+                        listContainer.innerHTML += `
                             <div class="card">
                                 <h3>👤 Name: ${customer.name}</h3>
                                 <p>📅 Date: ${customer.date}</p>
                                 <p>💰 Payment: ₹${customer.payment}</p>
                             </div>
                         `;
-                        listContainer.innerHTML += customerCard;
                     });
                 }
             } catch (error) {
-                console.error("Error connecting to backend:", error);
-                listContainer.innerHTML = "<p class='error'>Failed to connect to the backend API. Check CORS settings.</p>";
+                listContainer.innerHTML = "<p style='color: red;'>Failed to fetch directories from the backend API.</p>";
             }
         }
     </script>
