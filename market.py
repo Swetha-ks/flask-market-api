@@ -1,10 +1,22 @@
+import os
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 
 market = Flask(__name__)
-
 CORS(market, resources={r"/*": {"origins": "*", "allow_headers": "*", "methods": ["GET", "POST", "OPTIONS"]}})
+
+# 1. CHANGED: Safely read database string dynamically from environment variables
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    # SQLAlchemy requires standard 'postgresql://' instead of legacy 'postgres://'
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# 2. CHANGED: Use Cloud Database if available, otherwise fallback to local SQLite file
+market.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL or 'sqlite:///market.db'
+market.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(market)
 
 # 1. ADDED: Tell Flask where to create your local database file
 market.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///market.db'

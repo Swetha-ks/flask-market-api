@@ -17,7 +17,9 @@
         .btn-submit:hover { background-color: #218838; }
         .btn-fetch { background-color: #007bff; }
         .btn-fetch:hover { background-color: #0056b3; }
-        .card { background: white; padding: 15px; margin: 10px 0; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid #007bff; }
+        .card { background: white; padding: 15px; margin: 15px 0; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid #007bff; position: relative; }
+        .btn-delete { background-color: #dc3545; width: auto; display: inline-block; padding: 5px 10px; font-size: 12px; margin: 0; position: absolute; right: 15px; top: 15px; }
+        .btn-delete:hover { background-color: #c82333; }
         .status-message { font-weight: bold; margin: 10px 0; padding: 10px; border-radius: 4px; display: none; }
         .success { background-color: #d4edda; color: #155724; display: block; }
         .error { background-color: #f8d7da; color: #721c24; display: block; }
@@ -28,7 +30,6 @@
     <div class="container">
         <h1>Customer Management Dashboard</h1>
 
-        <!-- SECTION 1: THE INPUT FORM -->
         <div class="form-section">
             <h2>Add New Customer</h2>
             <div id="status" class="status-message"></div>
@@ -48,7 +49,6 @@
             <button class="btn-submit" onclick="submitCustomer()">Add to Cloud Database</button>
         </div>
 
-        <!-- SECTION 2: DATA RETRIEVAL DISPLAY -->
         <div class="form-section">
             <h2>Saved Customer Directory</h2>
             <button class="btn-fetch" onclick="loadCustomers()">Fetch Directory Records</button>
@@ -62,16 +62,13 @@
         // --- SUBMIT FUNCTION (POST REQUEST) ---
         async function submitCustomer() {
             const statusDiv = document.getElementById('status');
-            
-            // 1. Grab values typed into the browser text inputs
             const nameValue = document.getElementById('cusName').value;
             const dateValue = document.getElementById('cusDate').value;
             const paymentValue = document.getElementById('cusPayment').value;
 
-            // Simple check to ensure fields aren't completely blank before sending
             if (!nameValue || !dateValue || !paymentValue) {
                 statusDiv.className = "status-message error";
-                statusDiv.innerText = "Error: Please fill out all three fields first.";
+                statusDiv.innerText = "Error: Please fill out all fields first.";
                 return;
             }
 
@@ -79,41 +76,30 @@
             statusDiv.style.display = "block";
             statusDiv.innerText = "Sending payload data to cloud server...";
 
-                        try {
+            try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        name: nameValue,
-                        date: dateValue,
-                        payment: paymentValue
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: nameValue, date: dateValue, payment: paymentValue })
                 });
 
-                // Grab the JSON response text from the server (even if it's an error)
                 const responseData = await response.json();
 
                 if (response.status === 201) {
                     statusDiv.className = "status-message success";
-                    statusDiv.innerText = `Success! Customer "${nameValue}" saved successfully.`;
-                    
+                    statusDiv.innerText = `Success! Customer "${nameValue}" saved.`;
                     document.getElementById('cusName').value = '';
                     document.getElementById('cusDate').value = '';
                     document.getElementById('cusPayment').value = '';
-                    
                     loadCustomers();
                 } else {
-                    // CHANGED: Use the exact error message your Python backend sent!
                     statusDiv.className = "status-message error";
                     statusDiv.innerText = responseData.error || "Server rejected transaction.";
                 }
             } catch (err) {
                 statusDiv.className = "status-message error";
-                statusDiv.innerText = "Network Error: Could not connect to the cloud server.";
+                statusDiv.innerText = "Network Error: Could not connect to cloud.";
             }
-
         }
 
         // --- FETCH FUNCTION (GET REQUEST) ---
@@ -135,12 +121,36 @@
                                 <h3>👤 Name: ${customer.name}</h3>
                                 <p>📅 Date: ${customer.date}</p>
                                 <p>💰 Payment: ₹${customer.payment}</p>
+                                <!-- NEW: Delete button targets specific customer ID parameter row -->
+                                <button class="btn-delete" onclick="deleteCustomerRecord(${customer.id})">Delete</button>
                             </div>
                         `;
                     });
                 }
             } catch (error) {
                 listContainer.innerHTML = "<p style='color: red;'>Failed to fetch directories from the backend API.</p>";
+            }
+        }
+
+        // --- DELETE FUNCTION (DELETE REQUEST) ---
+        async function deleteCustomerRecord(customerId) {
+            if (!confirm("Are you sure you want to permanently delete this record?")) return;
+
+            try {
+                // Appends the specific row ID value straight into the URL mapping query route
+                const response = await fetch(`${API_URL}/${customerId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.status === 200) {
+                    // Instantly refresh the directory view list to show the entry is removed
+                    loadCustomers();
+                } else {
+                    alert("Failed to delete record from the cloud server.");
+                }
+            } catch (err) {
+                console.error("Delete operation failure:", err);
+                alert("Network error: Could not complete deletion.");
             }
         }
     </script>
