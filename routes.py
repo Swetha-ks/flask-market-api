@@ -1,7 +1,7 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_from_directory
 from extensions import db
 from models import Customer
-
+import os
 # 1. Create an independent Flask Blueprint container named 'customer_bp'
 customer_bp = Blueprint('customer_bp', __name__)
 
@@ -38,3 +38,11 @@ def delete_customer(cus_id):
     db.session.delete(customer)
     db.session.commit()
     return jsonify({"message": f"Customer row {cus_id} successfully deleted from table."}), 200
+
+@customer_bp.route('/')
+def serve_index_page():
+    # Find the exact path of the static folder on your computer
+    static_folder_path = os.path.join(os.getcwd(), 'static')
+    
+    # Safely locate index.html inside the static folder and send it to the browser
+    return send_from_directory(static_folder_path, 'index.html')
