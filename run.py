@@ -30,8 +30,8 @@ def create_app():
 
     return market
 
+application = create_app()
 
 if __name__ == '__main__':
-    # Start your local server instance
-    create_app().run(port=5000, debug=True)
+    application.run(port=5000, debug=True)
 
