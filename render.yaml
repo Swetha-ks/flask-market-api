@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: my-market-api
+    runtime: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn run:application" # Forces Render to look directly inside run.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
